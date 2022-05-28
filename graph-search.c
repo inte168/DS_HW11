@@ -15,9 +15,9 @@ typedef struct G_Type{
 
 void initialize(GraphType**);
 void insertVertex(GraphType* Graph);
-void insertEdge(GraphType* Graph, int v1, int v2);
+int insertEdge(GraphType* Graph, int v1, int v2);
 void DFS(GraphType* Graph);
-void BFS();
+void BFS(Graph);
 void printGraph();
 void freeGraph(GraphType* Graph);
 
@@ -41,7 +41,7 @@ void enQueue(int aNode);
 int main()
 {
 	char command;
-	int v, v1, v2;
+	int v1, v2;
     GraphType* Graph = NULL;
 
 	printf("-----허정윤 2021041047-----\n");
@@ -72,18 +72,15 @@ int main()
 		case 'e': case 'E':
 			printf("Input two vertex = ");
 			scanf("%d %d", &v1, &v2);
-			if(v1==v2){
-				printf("Error : Same vertex\n");
-				break;
-			}
 			insertEdge(Graph, v1, v2);
+			insertEdge(Graph, v2, v1);
 			break;
 
 		case 'd': case 'D':
 			DFS(Graph);
 			break;
 		case 'b': case 'B':
-			BFS();
+			BFS(Graph);
 			break;
 
 		case 'p': case 'P':
@@ -129,20 +126,21 @@ void insertVertex(GraphType* Graph)
 
 	//리턴되지 않았으면 n에 1을 더한다.
 	Graph->n++;
+	printf("The number of vertex is %d", Graph->n);
 }
 
 //Edge를 넣는 함수.
-void insertEdge(GraphType* Graph, int v1, int v2)
+int insertEdge(GraphType* Graph, int v1, int v2)
 {
     //Graph를 initialize하지 않았을 경우.
 	if(Graph == NULL){
         printf("Error : Please Initialize.\n");
-        return;
+        return 1;
     }
 	//v1,v2가 현재 vertex 외의 vertex를 지정한 경우(0~n이 아닌, n을 넘으면 그 vertex가 없음.)
-	if(v1>=Graph->n||v2>=Graph->n||v1<=Graph->n||v2<=Graph->n){
+	if(v1>Graph->n||v2>Graph->n||v1<0||v2<0){
 		printf("Error : Out of Vertex number\n");
-		return;
+		return 1;
 	}
 
 	//노드들을 만들어줌.(넣을 노드, 앞의 노드, 반복비교를 위한 노드)
@@ -152,12 +150,17 @@ void insertEdge(GraphType* Graph, int v1, int v2)
 	node->vertex = v2;
 	node->link = NULL;
 
+	//처음에 해서 chan이 없는 경우.
+	if(chan == NULL){
+		Graph->adj_list[v1] = node;
+		return 1;
+	}
 	//chan->link가 NULL이 아닌동안 chan을 옮겨가며 비교
 	for(;chan->link;chan = chan->link){
 		//같은 경우는 이미 있는 경우이므로, 오류메시지 출력 후 리턴.
 		if(chan->vertex == node->vertex){
 			printf("Error : Exsisted Node\n");
-			return;
+			return 1;
 		}
 
 		//오름차순으로 연결한다고 가정하여
@@ -169,11 +172,11 @@ void insertEdge(GraphType* Graph, int v1, int v2)
 			//그렇지 않으면 pre에다가 node 연결
 			if(pre == NULL) {
 				Graph->adj_list[v1] = node;
-				return;
+				return 1;
 			}
 			else {
 				pre->link = node;
-				return;
+				return 1;
 			}
 			
 		}
@@ -181,7 +184,7 @@ void insertEdge(GraphType* Graph, int v1, int v2)
 	}
 	//안들어간 경우, 맨 뒤에 붙이기
 	chan->link = node;
-
+	/*
 	//v1과 v2를 바꾸어서 위와 동일하게 시도.
 	chan = Graph->adj_list[v2];
 	pre = NULL;
@@ -191,20 +194,22 @@ void insertEdge(GraphType* Graph, int v1, int v2)
 			node->link = chan;
 			if(pre == NULL) {
 				Graph->adj_list[v2] = node;
-				return;
+				return 1;
 			}
 			else {
 				pre->link = node;
-				return;
+				return 1;
 			}
 		}
 		pre = chan;
 	}
 	//안들어간 경우, 맨 뒤에 붙이기
 	chan->link = node;
+	*/
+	return 1;
 }
 
-void DFS(GraphType* Graph)
+void BFS(GraphType* Graph)
 {
 	//p는 시작점. N은 vertex 갯수, path는 방문 여부
 	int p = 0;
@@ -214,38 +219,47 @@ void DFS(GraphType* Graph)
 		//다 0으로 만들어준다. (0이면 미방문, 1이면 방문)
 		path[i] = 0;
 	}
+	GraphNode* node = Graph->adj_list[p];//미리 node로 빼두기.
+	while(1){
+		if(node == NULL){
+			node = Graph->adj_list[++p];
+		}
+		else break;
+	}
+
 
 	//시작점인 0을 넣고, path에 기록, 출력
-	push(0);
-	path[0] = 1;
+	enQueue(p);
+	path[p] = 1;
 	printf("%d ", p);
 
-	GraphNode* node = Graph->adj_list[p];//미리 node로 빼두기.
+	
 	//top이 음수가 아니라면 (==비어있지 않다면)
-	while (top>=0) {
+	while (front != rear) {
 		//vertex갯수만큼 반복하여- node가 있고, vertex를 방문하지 않았으면 push한다.
-		for (int i = N-1; i >= 0; i--) {
-			if ((path[node->vertex] != 1) && (node)) {
-				push(node->vertex);				
+		for (int i = 0; node; i++) {
+			if (node && (path[node->vertex] != 1)) {
+				enQueue(node->vertex);				
 			}
 			node = node->link;
 		}
-
 		//pop하여 방문하지 않은 경우 출력.
-		p = pop();	
+		p = deQueue();	
 		if (path[p] != 1) {
 			printf("%d ", p);
 			path[p] = 1;
 		}
+		node = Graph->adj_list[p];
 	}
 	free(path);
 	return;
 }
 
-void BFS()
+void DFS(GraphType* Graph)
 {
-
+	
 }
+
 
 void printGraph()
 {
@@ -265,11 +279,14 @@ void freeGraph(GraphType* Graph)
 	}
 	free(Graph);
 }
-
+/*
 int pop()
 {
 	//top<0이란 것은 비어있단 의미.
-	if(top<0) return NULL;
+	if(top<0){
+		printf("Error : stack is Empty\n");
+		return -1;
+	}
 	//비어있지 않으면 stack의 top값을 리턴하고, top 값에서 1을 뺀다.
 	return stack[top--];
 }
@@ -279,7 +296,7 @@ void push(int aNode)
 	//top을 1을 넣고 top을 인덱스로 한 stack의 값에 aNode를 넣는다.
 	stack[++top] = aNode;
 }
-
+*/
 
 
 int deQueue()
@@ -287,7 +304,7 @@ int deQueue()
 	//front와 rear가 같으면 빈 queue
 	if(front == rear) {
 		// printf("\nError : Queue is Empty\n");
-		return NULL;
+		return 1;
 	}
 	//front가 최대 size를 넘으면 다시 1부터
 	//안넘으면 나머지 연산이니 그대로.
