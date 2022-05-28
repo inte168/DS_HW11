@@ -17,9 +17,10 @@ void initialize(GraphType**);
 void insertVertex(GraphType* Graph);
 int insertEdge(GraphType* Graph, int v1, int v2);
 void DFS(GraphType* Graph);
-void BFS(Graph);
+void BFS(GraphType* Graph);
 void printGraph();
 void freeGraph(GraphType* Graph);
+int invert(GraphNode* node);
 
 /* for stack -탐색에 필요함*/
 #define MAX_SIZE		10
@@ -220,12 +221,14 @@ void BFS(GraphType* Graph)
 		path[i] = 0;
 	}
 	GraphNode* node = Graph->adj_list[p];//미리 node로 빼두기.
+	/*
 	while(1){
 		if(node == NULL){
 			node = Graph->adj_list[++p];
 		}
 		else break;
 	}
+	*/
 
 
 	//시작점인 0을 넣고, path에 기록, 출력
@@ -244,7 +247,7 @@ void BFS(GraphType* Graph)
 			node = node->link;
 		}
 		//pop하여 방문하지 않은 경우 출력.
-		p = deQueue();	
+		p = deQueue();
 		if (path[p] != 1) {
 			printf("%d ", p);
 			path[p] = 1;
@@ -257,7 +260,92 @@ void BFS(GraphType* Graph)
 
 void DFS(GraphType* Graph)
 {
+	//p는 시작점. N은 vertex 갯수, path는 방문 여부
+	int p = 0;
+	int N = Graph->n;
+	int* path = (int*)malloc(N*sizeof(int));
+	for (int i = 0; i < N; i++) {
+		//다 0으로 만들어준다. (0이면 미방문, 1이면 방문)
+		path[i] = 0;
+	}
+	GraphNode* node = Graph->adj_list[p];//미리 node로 빼두기.
+	/*
+	while(1){
+		if(node == NULL){
+			node = Graph->adj_list[++p];
+		}
+		else break;
+	}
+	*/
 	
+
+	//시작점인 0을 넣고, path에 기록, 출력
+	push(p);
+	path[p] = 1;
+	printf("%d ", p);
+
+	
+	//top이 음수가 아니라면 (==비어있지 않다면)
+	while (top>=0) {
+		GraphNode* inv = node;
+
+		//invert 작업
+		GraphNode* middle = NULL;
+		GraphNode* trail = NULL;
+		GraphNode* n = inv;
+
+		while(n){
+			//middle과 n은 앞 노드부터 나아가게되고, trail은 middle의 값을 받아서 middle->link로 연결한다.
+			trail = middle;
+			middle = n;
+			n = n->link;
+			middle->link = trail;
+		}
+		//새로 연결된 middle을 node로 넣어준다.(어차피 입력은 복제된 node)
+		inv = middle;;
+		//vertex갯수만큼 반복하여- node가 있고, vertex를 방문하지 않았으면 push한다.
+		for (int i = 0; inv; i++) {
+			if (node && (path[inv->vertex] != 1)) {
+				push(inv->vertex);				
+			}
+			inv = inv->link;
+		}
+
+		for(int i=0;i <= top;i++){
+			printf("stack[%d] = %d\n", i, stack[i]);
+		}
+		//pop하여 방문하지 않은 경우 출력.
+		p = pop();	
+		if (path[p] != 1) {
+			printf("%d ", p);
+			path[p] = 1;
+		}
+		node = Graph->adj_list[p];
+		inv = node;
+		//invert 작업
+		middle = NULL;
+		trail = NULL;
+		n = inv;
+
+		while(n){
+			//middle과 n은 앞 노드부터 나아가게되고, trail은 middle의 값을 받아서 middle->link로 연결한다.
+			trail = middle;
+			middle = n;
+			n = n->link;
+			middle->link = trail;
+		}
+		//새로 연결된 middle을 node로 넣어준다.(어차피 입력은 복제된 node)
+		inv = middle;;
+		//vertex갯수만큼 반복하여- node가 있고, vertex를 방문하지 않았으면 push한다.
+		for (int i = 0; inv; i++) {
+			if (node && (path[inv->vertex] != 1)) {
+				push(inv->vertex);				
+			}
+			inv = inv->link;
+		}
+	}
+	free(path);
+	return;
 }
 
 
@@ -274,12 +362,32 @@ void freeGraph(GraphType* Graph)
 		for(;node;){
 			pre = node;
 			node = node->link;
-			free(pre);
+			free(pre); 
 		}
 	}
 	free(Graph);
 }
-/*
+
+int invert(GraphNode* node) {
+	//여기서는 h->first로 노드를 가져오기에 n으로 따로 빼준다.
+	//trail은 이전값을 연결하기 위해, middle은 새로 연결하기 위해 사용
+	GraphNode* middle = NULL;
+	GraphNode* trail = NULL;
+	GraphNode* n = node;
+
+	while(n){
+		//middle과 n은 앞 노드부터 나아가게되고, trail은 middle의 값을 받아서 middle->link로 연결한다.
+		trail = middle;
+		middle = n;
+		n = n->link;
+		middle->link = trail;
+	}
+	//새로 연결된 middle을 node로 넣어준다.(어차피 입력은 복제된 node)
+	node = middle;
+
+	return 0;
+}
+
 int pop()
 {
 	//top<0이란 것은 비어있단 의미.
@@ -296,7 +404,7 @@ void push(int aNode)
 	//top을 1을 넣고 top을 인덱스로 한 stack의 값에 aNode를 넣는다.
 	stack[++top] = aNode;
 }
-*/
+
 
 
 int deQueue()
