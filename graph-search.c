@@ -157,7 +157,7 @@ int insertEdge(GraphType* Graph, int v1, int v2)
 		return 1;
 	}
 	//chan->link가 NULL이 아닌동안 chan을 옮겨가며 비교
-	for(;chan->link;chan = chan->link){
+	for(;chan;chan = chan->link){
 		//같은 경우는 이미 있는 경우이므로, 오류메시지 출력 후 리턴.
 		if(chan->vertex == node->vertex){
 			printf("Error : Exsisted Node\n");
@@ -184,29 +184,7 @@ int insertEdge(GraphType* Graph, int v1, int v2)
 		pre = chan;
 	}
 	//안들어간 경우, 맨 뒤에 붙이기
-	chan->link = node;
-	/*
-	//v1과 v2를 바꾸어서 위와 동일하게 시도.
-	chan = Graph->adj_list[v2];
-	pre = NULL;
-	node->vertex = v1;
-	for(;chan->link;chan = chan->link){
-		if(chan->vertex > node->vertex){
-			node->link = chan;
-			if(pre == NULL) {
-				Graph->adj_list[v2] = node;
-				return 1;
-			}
-			else {
-				pre->link = node;
-				return 1;
-			}
-		}
-		pre = chan;
-	}
-	//안들어간 경우, 맨 뒤에 붙이기
-	chan->link = node;
-	*/
+	pre->link = node;
 	return 1;
 }
 
@@ -257,78 +235,41 @@ void DFS(GraphType* Graph)
 		//다 0으로 만들어준다. (0이면 미방문, 1이면 방문)
 		path[i] = 0;
 	}
-	GraphNode* node = Graph->adj_list[p];//미리 node로 빼두기.
-	/*
-	while(1){
-		if(node == NULL){
-			node = Graph->adj_list[++p];
-		}
-		else break;
-	}
-	*/
-	
 
 	//시작점인 0을 넣고, path에 기록, 출력
 	push(p);
 	path[p] = 1;
 	printf("%d ", p);
 
-	
+	//미리 h를 이용해서 invert 시켜준다.
+	GraphNode* h;
+	for(int i=0;i<N;i++){
+		h->link = Graph->adj_list[i];
+		invert(h);
+		Graph->adj_list[i] = h->link;
+	}
 	//top이 음수가 아니라면 (==비어있지 않다면)
 	while (top>=0) {
-		GraphNode* inv = node;
-
-		//invert 작업
-		GraphNode* middle = NULL;
-		GraphNode* trail = NULL;
-		GraphNode* n = inv;
-
-		while(n){
-			//middle과 n은 앞 노드부터 나아가게되고, trail은 middle의 값을 받아서 middle->link로 연결한다.
-			trail = middle;
-			middle = n;
-			n = n->link;
-			middle->link = trail;
-		}
-		//새로 연결된 middle을 node로 넣어준다.(어차피 입력은 복제된 node)
-		inv = middle;
 		//vertex갯수만큼 반복하여- node가 있고, vertex를 방문하지 않았으면 push한다.
-		for (int i = 0; inv; i++) {
-			if (node && (path[inv->vertex] != 1)) {
-				push(inv->vertex);				
+		for (GraphNode* node =  Graph->adj_list[p]; node; node = node->link) {
+			if (path[node->vertex] != 1) {
+				push(node->vertex);				
 			}
-			inv = inv->link;
 		}
 
-		//pop하여 방문하지 않은 경우 출력.
+		//pop하여 방문하지 않은 경우에는 출력.
 		p = pop();	
 		if (path[p] != 1) {
 			printf("%d ", p);
 			path[p] = 1;
 		}
-		node = Graph->adj_list[p];
-		inv = node;
-		//invert 작업
-		middle = NULL;
-		trail = NULL;
-		n = inv;
-
-		while(n){
-			//middle과 n은 앞 노드부터 나아가게되고, trail은 middle의 값을 받아서 middle->link로 연결한다.
-			trail = middle;
-			middle = n;
-			n = n->link;
-			middle->link = trail;
-		}
-		//새로 연결된 middle을 node로 넣어준다.(어차피 입력은 복제된 node)
-		inv = middle;;
-		//vertex갯수만큼 반복하여- node가 있고, vertex를 방문하지 않았으면 push한다.
-		for (int i = 0; inv; i++) {
-			if (node && (path[inv->vertex] != 1)) {
-				push(inv->vertex);				
-			}
-			inv = inv->link;
-		}
+	}
+	//printf("나왔니.");
+	//이후 사용을 위해서 다시 invert 시켜준다.
+	for(int i=0;i<N;i++){
+		h->link = Graph->adj_list[i];
+		invert(h);
+		Graph->adj_list[i] = h->link;
 	}
 	free(path);
 	return;
@@ -366,7 +307,7 @@ int invert(GraphNode* node) {
 	//trail은 이전값을 연결하기 위해, middle은 새로 연결하기 위해 사용
 	GraphNode* middle = NULL;
 	GraphNode* trail = NULL;
-	GraphNode* n = node;
+	GraphNode* n = node->link;
 
 	while(n){
 		//middle과 n은 앞 노드부터 나아가게되고, trail은 middle의 값을 받아서 middle->link로 연결한다.
@@ -376,7 +317,7 @@ int invert(GraphNode* node) {
 		middle->link = trail;
 	}
 	//새로 연결된 middle을 node로 넣어준다.(어차피 입력은 복제된 node)
-	node = middle;
+	node->link = middle;
 
 	return 0;
 }
