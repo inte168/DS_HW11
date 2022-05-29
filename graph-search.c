@@ -220,16 +220,6 @@ void BFS(GraphType* Graph)
 		//다 0으로 만들어준다. (0이면 미방문, 1이면 방문)
 		path[i] = 0;
 	}
-	GraphNode* node = Graph->adj_list[p];//미리 node로 빼두기.
-	/*
-	while(1){
-		if(node == NULL){
-			node = Graph->adj_list[++p];
-		}
-		else break;
-	}
-	*/
-
 
 	//시작점인 0을 넣고, path에 기록, 출력
 	enQueue(p);
@@ -237,22 +227,21 @@ void BFS(GraphType* Graph)
 	printf("%d ", p);
 
 	
-	//top이 음수가 아니라면 (==비어있지 않다면)
-	while (front != rear) {
-		//vertex갯수만큼 반복하여- node가 있고, vertex를 방문하지 않았으면 push한다.
-		for (int i = 0; node; i++) {
-			if (node && (path[node->vertex] != 1)) {
+	//front == rear인 경우가 queue가 빌 경우.
+	while(front != rear) {
+		//node가 NULL일 때까지. 연결된 node를 전부 탐색한다.
+		for(GraphNode* node = Graph->adj_list[p]; node; node = node->link) {
+			//방문하지 않은 node가 있으면 enqueue
+			if (path[node->vertex] != 1) {
 				enQueue(node->vertex);				
 			}
-			node = node->link;
 		}
-		//pop하여 방문하지 않은 경우 출력.
+		//dequeue하여 하나씩 방문여부 확인 및 출력
 		p = deQueue();
-		if (path[p] != 1) {
+		if(path[p] != 1) {
 			printf("%d ", p);
 			path[p] = 1;
 		}
-		node = Graph->adj_list[p];
 	}
 	free(path);
 	return;
@@ -311,9 +300,6 @@ void DFS(GraphType* Graph)
 			inv = inv->link;
 		}
 
-		for(int i=0;i <= top;i++){
-			printf("stack[%d] = %d\n", i, stack[i]);
-		}
 		//pop하여 방문하지 않은 경우 출력.
 		p = pop();	
 		if (path[p] != 1) {
