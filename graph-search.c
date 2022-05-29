@@ -85,7 +85,7 @@ int main()
 			break;
 
 		case 'p': case 'P':
-			printGraph();
+			printGraph(Graph);
 			break;
 
 		default:
@@ -302,7 +302,7 @@ void DFS(GraphType* Graph)
 			middle->link = trail;
 		}
 		//새로 연결된 middle을 node로 넣어준다.(어차피 입력은 복제된 node)
-		inv = middle;;
+		inv = middle;
 		//vertex갯수만큼 반복하여- node가 있고, vertex를 방문하지 않았으면 push한다.
 		for (int i = 0; inv; i++) {
 			if (node && (path[inv->vertex] != 1)) {
@@ -349,9 +349,16 @@ void DFS(GraphType* Graph)
 }
 
 
-void printGraph()
+void printGraph(GraphType* Graph)
 {
-
+	for(int i =0;i<Graph->n;i++){
+		GraphNode* node = Graph->adj_list[i];
+		printf("vertex %d : ", i);
+		for(;node;node = node->link){
+			printf("%d ", node->vertex);
+		}
+		printf("\n");
+	}
 }
 
 void freeGraph(GraphType* Graph)
