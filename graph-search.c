@@ -118,7 +118,6 @@ void insertVertex(GraphType* Graph)
         return;
     }
 	
-
 	//n(갯수)에 1을 더해서 최대 vertex보다 크면 오류.
 	if(((Graph->n)+1)>MAX_VERTEX){
 		printf("Error : Max Vertex\n");
@@ -151,12 +150,12 @@ int insertEdge(GraphType* Graph, int v1, int v2)
 	node->vertex = v2;
 	node->link = NULL;
 
-	//처음에 해서 chan이 없는 경우.
+	//처음에 해서 chan이 없는 경우. adj_list에 넣음.
 	if(chan == NULL){
 		Graph->adj_list[v1] = node;
 		return 1;
 	}
-	//chan->link가 NULL이 아닌동안 chan을 옮겨가며 비교
+	//chan가 NULL이 아닌동안 chan을 옮겨가며 비교
 	for(;chan;chan = chan->link){
 		//같은 경우는 이미 있는 경우이므로, 오류메시지 출력 후 리턴.
 		if(chan->vertex == node->vertex){
@@ -264,7 +263,6 @@ void DFS(GraphType* Graph)
 			path[p] = 1;
 		}
 	}
-	//printf("나왔니.");
 	//이후 사용을 위해서 다시 invert 시켜준다.
 	for(int i=0;i<N;i++){
 		h->link = Graph->adj_list[i];
@@ -278,9 +276,11 @@ void DFS(GraphType* Graph)
 
 void printGraph(GraphType* Graph)
 {
+	//adj_list의 index를 돌림
 	for(int i =0;i<Graph->n;i++){
 		GraphNode* node = Graph->adj_list[i];
 		printf("vertex %d : ", i);
+		//node를 넘겨가면서 vertex 출력.
 		for(;node;node = node->link){
 			printf("%d ", node->vertex);
 		}
@@ -294,11 +294,13 @@ void freeGraph(GraphType* Graph)
 		GraphNode* node = Graph->adj_list[i];
 		GraphNode* pre = NULL;
 		for(;node;){
+			//pre와 node를 한칸씩 옮기고 pre는 해제.
 			pre = node;
 			node = node->link;
 			free(pre); 
 		}
 	}
+	//Graph까지 해제
 	free(Graph);
 }
 
